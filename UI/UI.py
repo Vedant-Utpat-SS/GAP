@@ -11,8 +11,13 @@ from RAG import query_data
 from RAG import populate_database
 import Send_Email
 
-# Global Variable for path to data folder for storing PDFs
-PATH = r"D:\OneDrive - SoftDEL Systems Pvt. Ltd\GAP\Demo\AIHackathon\UI\data"
+# Global Variable for path to data folder for storing DOCs
+PATH = r"C:\Vedant\CS\Projects\GAP\GAP\AIHackathon\UI\data"
+# Root folder containing all subfolders to be fetched automatically
+SOURCE_RECURSIVE = r"C:\Vedant\Documents\AI_test"
+# Supported DOC extensions 
+doc_extensions = (".pdf", ".doc", ".docx")
+
 
 # ---------------------- Session State ----------------------
 if "chat_history" not in st.session_state:
@@ -26,7 +31,12 @@ if "email_set" not in st.session_state:
 
 # ---------------------- Refresh Function (ADDED) ----------------------
 def refresh_app():
-    st.rerun()
+    # st.rerun()
+    fetch_docs()
+    print("Automatically Fetched all the updated docs!")
+    # update the embedings
+    populate_database.load()
+    st.success(f"Uploaded:")
     
 def handle_message(message: str):
     if not message.strip():
@@ -43,35 +53,26 @@ def handle_message(message: str):
     st.session_state.chat_history.append(("Bot:", bot_reply))
    
 def fetch_docs():
-    # Root folder containing all subfolders
-    source_folder = r"D:\OneDrive - SoftDEL Systems Pvt. Ltd\Softdel Systems\GAP\OneDrive_2025-12-18"
-
-    # Folder where all documents will be copied
-    output_folder = r"D:\OneDrive - SoftDEL Systems Pvt. Ltd\Softdel Systems\GAP\Demo\AIHackathon\UI\data"
-
     # Create output folder if it doesn't exist
-    os.makedirs(output_folder, exist_ok=True)
-
-    # List of file extensions you consider as documents
-    doc_extensions = (".pdf", ".doc", ".docx")
+    os.makedirs(PATH, exist_ok=True)
 
     # Walk through all subfolders
-    for root, dirs, files in os.walk(source_folder):
+    for root, dirs, files in os.walk(SOURCE_RECURSIVE):
         for file in files:
             if file.lower().endswith(doc_extensions):
                 source_file = os.path.join(root, file)
-                dest_file = os.path.join(output_folder, file)
+                dest_file = os.path.join(PATH, file)
 
                 # If file with same name exists, rename to avoid overwriting
                 counter = 1
                 base_name, ext = os.path.splitext(file)
                 while os.path.exists(dest_file):
-                    dest_file = os.path.join(output_folder, f"{base_name}_{counter}{ext}")
+                    dest_file = os.path.join(PATH, f"{base_name}_{counter}{ext}")
                     counter += 1
 
                 shutil.copy2(source_file, dest_file)  # Copy file with metadata
 
-    print("All documents copied to:", output_folder)
+    print("All documents copied to:", PATH)
 
 # ---------------------- Streamlit UI ----------------------
 st.set_page_config(layout="wide")
@@ -81,7 +82,7 @@ st.title("📑 Seal The Deal ")
 with st.sidebar:
     # Upload Button 
     st.header("📂 Upload Contract")
-    uploaded_pdf = st.file_uploader("Upload PDF", type=["pdf"])
+    uploaded_pdf = st.file_uploader("Upload PDF", type=doc_extensions)
     if uploaded_pdf:
         dest_folder = r""+PATH
 
@@ -95,6 +96,7 @@ with st.sidebar:
         with open(dest_path, "wb") as f:
             f.write(uploaded_pdf.read())
 
+        # update the embedings
         populate_database.load()
         st.success(f"Uploaded: {file_name}")
 
@@ -103,7 +105,7 @@ with st.sidebar:
         # Clear Context by deleting PDFs and DB
         if os.path.exists(PATH):
             for file in os.listdir(PATH):
-                if file.lower().endswith(".pdf"):
+                if file.lower().endswith(doc_extensions):
                     try:
                         os.remove(os.path.join(PATH, file))
                     except Exception as e:
@@ -113,7 +115,7 @@ with st.sidebar:
         st.success("Database cleared successfully!")
      # ---------------------- Refresh Button (ADDED) ----------------------
     st.divider()
-    if st.button("🔄 Refresh"):
+    if st.button("🔄 Refresh_From_Sharepoint"):
         refresh_app()
 
     # Email
