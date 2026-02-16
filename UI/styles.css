@@ -1,0 +1,18 @@
+:root{
+  --bg:#0f1720;
+  --card:#0b1220;
+  --text:#e6eef8;
+  --muted:#9fb0c9;
+}
+*{box-sizing:border-box}
+body{font-family:Inter,Segoe UI,Arial;background:var(--bg);color:var(--text);margin:0;padding:32px;}
+main{max-width:780px;margin:0 auto;background:var(--card);padding:20px;border-radius:10px;box-shadow:0 6px 24px rgba(2,6,23,0.6)}
+h1{margin:0 0 12px 0}
+textarea{width:100%;padding:12px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);background:#071425;color:var(--text);resize:vertical}
+.controls{margin-top:12px;text-align:right}
+button{background:#0ea5a4;border:0;padding:10px 16px;border-radius:8px;color:#022;cursor:pointer}
+button:disabled{opacity:0.6;cursor:default}
+#result{margin-top:18px;padding:12px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));}
+.hidden{display:none}
+#answer{white-space:pre-wrap}
+pre{background:transparent;color:var(--muted);padding:6px;margin:6px 0}

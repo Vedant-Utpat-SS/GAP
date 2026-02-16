@@ -23,7 +23,12 @@ def main():
     parser.add_argument("query_text", type=str, help="The query text.")
     args = parser.parse_args()
     query_text = args.query_text
-    query_rag(query_text)
+    result = query_rag(query_text)
+    # Print result in same human-friendly format as before.
+    try:
+        print(f"Response: {result['answer']}\nSources: {result.get('sources')}")
+    except Exception:
+        print(result)
 
 def query_rag(query_text: str):
     # Prepare the DB.
@@ -43,8 +48,9 @@ def query_rag(query_text: str):
 
     sources = [doc.metadata.get("id", None) for doc, _score in results]
     formatted_response = f"Response: {response_text}\nSources: {sources}"
-    print(formatted_response)
-    return response_text
+
+    # Return structured data so API layer can use it.
+    return {"answer": response_text, "sources": sources}
 
 if __name__ == "__main__":
     main()

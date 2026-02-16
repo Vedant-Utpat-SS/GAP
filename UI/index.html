@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RAG UI</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <h1>RAG Query</h1>
+      <textarea id="query" placeholder="Enter your question..." rows="6"></textarea>
+      <div class="controls">
+        <button id="submit">Ask</button>
+      </div>
+
+      <section id="result" class="hidden">
+        <h2>Answer</h2>
+        <div id="answer"></div>
+        <h3>Sources</h3>
+        <pre id="sources"></pre>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
