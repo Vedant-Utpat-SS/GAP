@@ -6,8 +6,15 @@
 }
 *{box-sizing:border-box}
 body{font-family:Inter,Segoe UI,Arial;background:var(--bg);color:var(--text);margin:0;padding:32px;}
-main{max-width:780px;margin:0 auto;background:var(--card);padding:20px;border-radius:10px;box-shadow:0 6px 24px rgba(2,6,23,0.6)}
 h1{margin:0 0 12px 0}
+.container{display:flex;gap:18px;max-width:1100px;margin:0 auto}
+.sidebar{width:300px;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));padding:16px;border-radius:8px}
+.main{flex:1;background:var(--card);padding:20px;border-radius:10px;box-shadow:0 6px 24px rgba(2,6,23,0.6)}
+label.label{display:block;margin-bottom:8px}
+#fileinput{width:100%;margin-bottom:8px}
+.small-row{display:flex;gap:8px;margin-bottom:8px}
+#filesList{max-height:180px;overflow:auto;padding:6px;background:rgba(255,255,255,0.02);border-radius:6px}
+.muted{color:var(--muted);margin-top:8px}
 textarea{width:100%;padding:12px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);background:#071425;color:var(--text);resize:vertical}
 .controls{margin-top:12px;text-align:right}
 button{background:#0ea5a4;border:0;padding:10px 16px;border-radius:8px;color:#022;cursor:pointer}
@@ -16,3 +23,4 @@ button:disabled{opacity:0.6;cursor:default}
 .hidden{display:none}
 #answer{white-space:pre-wrap}
 pre{background:transparent;color:var(--muted);padding:6px;margin:6px 0}
+

@@ -7,20 +7,44 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main>
-      <h1>RAG Query</h1>
-      <textarea id="query" placeholder="Enter your question..." rows="6"></textarea>
-      <div class="controls">
-        <button id="submit">Ask</button>
-      </div>
+    <div class="container">
+      <aside class="sidebar">
+        <h2>Controls</h2>
+        <label class="label">Upload files</label>
+        <input id="fileinput" type="file" multiple accept=".pdf,.doc,.docx" />
+        <div class="small-row">
+          <button id="uploadBtn">Upload</button>
+          <button id="refreshBtn">Refresh</button>
+          <button id="clearBtn">Clear DB</button>
+        </div>
 
-      <section id="result" class="hidden">
-        <h2>Answer</h2>
-        <div id="answer"></div>
-        <h3>Sources</h3>
-        <pre id="sources"></pre>
-      </section>
-    </main>
+        <hr />
+        <h3>Files</h3>
+        <div id="filesList" class="files"></div>
+
+        <hr />
+        <h3>Email</h3>
+        <input id="nameInput" placeholder="Your name" />
+        <input id="emailInput" placeholder="Your email" />
+        <button id="sendEmailBtn">Save Email & Notify</button>
+        <div id="emailStatus" class="muted"></div>
+      </aside>
+
+      <main class="main">
+        <h1>RAG Query</h1>
+        <textarea id="query" placeholder="Enter your question..." rows="6"></textarea>
+        <div class="controls">
+          <button id="submit">Ask</button>
+        </div>
+
+        <section id="result" class="hidden">
+          <h2>Answer</h2>
+          <div id="answer"></div>
+          <h3>Sources</h3>
+          <pre id="sources"></pre>
+        </section>
+      </main>
+    </div>
 
     <script src="app.js"></script>
   </body>
