@@ -9,10 +9,8 @@ import spacy
 import pytesseract
 from pdf2image import convert_from_path
 import json
-import query_data
-import shutil
-import Send_Email
-import populate_database
+from RAG import query_data
+import UI.Send_Email as Send_Email
 
 # ---------------------- NLP Model ----------------------
 nlp = spacy.load("en_core_web_sm")
@@ -151,7 +149,7 @@ def handle_message(message: str):
 
 # ---------------------- Streamlit UI ----------------------
 st.set_page_config(layout="wide")
-st.title("📑 Unity - Contract Chatbot")
+st.title("📑 UniSoft - Contract Chatbot")
 
 # Sidebar
 with st.sidebar:
@@ -172,19 +170,6 @@ with st.sidebar:
 
         # Extract features
         st.session_state.extracted_features = extract_features_from_pdf(dest_path)
-
-        # # Display key features (only if available)
-        # st.subheader("📝 Extracted Features")
-        # features = st.session_state.extracted_features
-
-        # if features.get("start_date"):
-        #     st.markdown(f"*Start Date:* {features.get('start_date')}")
-        # if features.get("end_date"):
-        #     st.markdown(f"*End Date:* {features.get('end_date')}")
-        # if features.get("contract_value"):
-        #     st.markdown(f"*Contract Value:* {features.get('contract_value')}")
-        # if features.get("parties"):
-        #     st.markdown(f"*Parties:* {features.get('parties')}")
 
     # Email
     if not st.session_state.email_set:
@@ -255,3 +240,4 @@ with st.form(key="message_form", clear_on_submit=True):
     if submit_button and user_input:
         handle_message(user_input)
         st.experimental_rerun()
+
