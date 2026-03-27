@@ -1,50 +1,52 @@
-const net = require('net');
+const net = require("net");
+const express = require("express");
+const cors = require("cors");
 
-function sendQuestion(question) {
-    return new Promise((resolve, reject) => {
-        const client = new net.Socket();
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-        let responseData = '';
+app.post("/query", (req, res) => {
+  const client = new net.Socket();
+  let data = "";
+  let responded = false;
 
-        client.connect(50001, '127.0.0.1', () => {
-            console.log('[INFO] Connected to Python server');
+  const safeSend = (fn) => {
+    if (!responded) {
+      responded = true;
+      fn();
+    }
+  };
 
-            const payload = JSON.stringify({
-                message: question
-            });
+  client.connect(50001, "127.0.0.1", () => {
+    client.write(JSON.stringify({ message: req.body.query }));
+  });
 
-            client.write(payload);
-        });
+  client.on("data", chunk => {
+    data += chunk.toString();
+    client.end();   // 🔥 critical
+  });
 
-        // Collect response
-        client.on('data', (data) => {
-            responseData += data.toString();
-        });
-
-        client.on('end', () => {
-            try {
-                const parsed = JSON.parse(responseData);
-                resolve(parsed.response);
-            } catch (err) {
-                reject('Invalid JSON response');
-            }
-        });
-
-        client.on('error', (err) => {
-            reject(err.message);
-        });
-
-        // ⏱️ 2-minute timeout
-        client.setTimeout(120000);
-
-        client.on('timeout', () => {
-            client.destroy();
-            reject('Request timed out after 2 minutes');
-        });
+  client.on("end", () => {
+    safeSend(() => {
+      try {
+        const parsed = JSON.parse(data);
+        res.json(parsed);
+      } catch {
+        res.status(500).send("Invalid JSON from Python");
+      }
     });
-}
+  });
 
-// Usage
-sendQuestion("What is BACnet?")
-    .then(res => console.log("[RESPONSE]", res))
-    .catch(err => console.error("[ERROR]", err));
+  client.on("error", err => {
+    safeSend(() => res.status(500).send(err.message));
+  });
+
+  client.setTimeout(10000);
+  client.on("timeout", () => {
+    client.destroy();
+    safeSend(() => res.status(504).send("Python timeout"));
+  });
+});
+
+app.listen(8000, () => console.log("Server running on 8000"));

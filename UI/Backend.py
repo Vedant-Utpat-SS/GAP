@@ -48,7 +48,7 @@ def handle_client(conn, addr):
         print(f"[INFO] Extracted string: {received_string}")
 
         # Send response back (optional)
-        response = "khushi is happy"
+        response = "test response"
         response = json.dumps({
             "response": response
         })

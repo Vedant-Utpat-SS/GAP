@@ -10,22 +10,28 @@ function appendMessage(text, sender) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function sendMessage() {
+async function sendMessage() {
   const userText = input.value.trim();
   if (!userText) return;
 
   appendMessage(userText, "user");
   input.value = "";
 
-  // Fake bot response (you can replace this with API call)
-//   setTimeout(() => {
-//     const botReply = "You said: " + userText;
-//     appendMessage(botReply, "bot");
-//   }, 500);
-  setTimeout(() => {
-    const botReply = "reply: " + sendQuestion(userText);
-    appendMessage(botReply, "bot");
-  }, 5000);
+  try {
+    const response = await fetch("http://localhost:8000/query", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query: userText }),
+    });
+
+    const data = await response.json();
+    appendMessage(data.response, "bot");
+
+  } catch (err) {
+    appendMessage("Error: " + err.message, "bot");
+  }
 }
 
 // Enter key support
