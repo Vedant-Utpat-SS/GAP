@@ -31,7 +31,7 @@ export default function ChatWindow() {
       const data = await sendMessage(text);
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: data.answer || 'No answer returned from server.',
+        content: data.answer || data.response || 'wrong',
       }]);
     } catch (err) {
       setMessages(prev => [...prev, {
