@@ -10,3 +10,7 @@ langchain
 chromadb # Vector storage
 pytest
 boto3
+
+new dependencies
+npm init -y(if required)
+npm install express cors
