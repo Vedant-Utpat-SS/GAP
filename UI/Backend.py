@@ -1,5 +1,19 @@
 import socket
 import json
+import os
+import sys
+# Add project root BEFORE importing RAG
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(ROOT_DIR)
+from RAG import query_data
+from RAG import populate_database
+
+# Global Variable for path to data folder for storing DOCs
+PATH = r"d:\EktaSonawane\Entropy\Test Documents"
+# Root folder containing all subfolders to be fetched automatically
+SOURCE_RECURSIVE = r"d:\EktaSonawane\Entropy\Test Documents"
+# Supported DOC extensions 
+doc_extensions = (".pdf", ".doc", ".docx")
 
 HOST = '0.0.0.0'   # Listen on all interfaces
 PORT = 50001
@@ -49,6 +63,7 @@ def handle_client(conn, addr):
 
         # Send response back (optional)
         response = "test response"
+        response = query_data.query_rag(message) 
         response = json.dumps({
             "response": response
         })
@@ -60,8 +75,8 @@ def handle_client(conn, addr):
         conn.close()
         print(f"[INFO] Connection closed {addr}")
 
-
 def start_server():
+    populate_database.load()
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
         server.bind((HOST, PORT))
         server.listen()

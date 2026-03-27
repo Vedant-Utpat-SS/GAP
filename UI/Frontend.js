@@ -42,7 +42,7 @@ app.post("/query", (req, res) => {
     safeSend(() => res.status(500).send(err.message));
   });
 
-  client.setTimeout(10000);
+  client.setTimeout(100000);
   client.on("timeout", () => {
     client.destroy();
     safeSend(() => res.status(504).send("Python timeout"));
