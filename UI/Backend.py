@@ -63,7 +63,7 @@ def handle_client(conn, addr):
 
         # Send response back (optional)
         response = "test response"
-        response = query_data.query_rag(message) 
+        response = query_data.query_rag(received_string) 
         response = json.dumps({
             "response": response
         })
