@@ -1,5 +1,7 @@
-from langchain_community.embeddings.ollama import OllamaEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
 def get_embedding_function():
-    embeddings = OllamaEmbeddings(model="nomic-embed-text")
+    embeddings = HuggingFaceEmbeddings(
+        model_name="all-MiniLM-L6-v2",
+    )
     return embeddings

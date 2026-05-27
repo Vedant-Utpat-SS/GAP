@@ -1,91 +1,106 @@
-import socket
-import json
+"""
+FastAPI HTTP backend for the Contract Analysis RAG UI.
+
+Run from the UI/ directory:
+    pip install fastapi uvicorn
+    python Backend.py
+
+The server starts on http://localhost:8000
+Endpoints:
+    POST /query   { "query": "..." }  → { "answer": "...", "sources": [...] }
+    GET  /files                       → { "files": ["doc1.pdf", ...] }
+"""
+
 import os
 import sys
-# Add project root BEFORE importing RAG
+
+# Load .env from UI/ or project root if present
+def _load_env():
+    for env_path in [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"),
+    ]:
+        if os.path.isfile(env_path):
+            with open(env_path) as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, _, v = line.partition("=")
+                        os.environ.setdefault(k.strip(), v.strip())
+            break
+
+_load_env()
+
+# Add project root so that `from RAG import ...` works
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(ROOT_DIR)
-from RAG import query_data
-from RAG import populate_database
 
-# Global Variable for path to data folder for storing DOCs
-PATH = r"d:\EktaSonawane\Entropy\Test Documents"
-# Root folder containing all subfolders to be fetched automatically
-SOURCE_RECURSIVE = r"d:\EktaSonawane\Entropy\Test Documents"
-# Supported DOC extensions 
-doc_extensions = (".pdf", ".doc", ".docx")
+# Change working directory to UI/ so that relative paths ("chroma", "data") resolve correctly
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-HOST = '0.0.0.0'   # Listen on all interfaces
-PORT = 50001
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from contextlib import asynccontextmanager
+from RAG import query_data, populate_database
 
-def send_string_to_server(response_string):
+# ── supported document extensions ──────────────────────────────
+DOC_EXTENSIONS = (".pdf", ".doc", ".docx")
+DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+
+
+# ── startup: load / refresh the Chroma vector store ────────────
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("[INFO] Loading documents into Chroma …")
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-            client.connect((HOST, PORT))
-
-            # Create JSON payload
-            payload = json.dumps({
-                "message": response_string
-            })
-
-            # Send data
-            client.sendall(payload.encode('utf-8'))
-
-            # Receive response (optional)
-            # data = client.recv(4096)
-            # if data:
-            #     response = json.loads(data.decode('utf-8'))
-            #     print(f"[INFO] Server response: {response}")
-            #     return response
-
+        populate_database.load()
+        print("[INFO] Chroma ready.")
     except Exception as e:
-        print(f"[ERROR] {e}")
-        return None
+        print(f"[WARN] Could not load documents: {e}")
+    yield
 
-def handle_client(conn, addr):
-    print(f"[INFO] Connected by {addr}")
+
+app = FastAPI(title="Contract Analysis API", lifespan=lifespan)
+
+# ── CORS: allow the Vite dev server (and any origin in dev) ────
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # tighten to your domain in production
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class QueryRequest(BaseModel):
+    query: str
+
+
+@app.post("/query")
+async def query_endpoint(req: QueryRequest):
+    if not req.query.strip():
+        raise HTTPException(status_code=400, detail="Query must not be empty.")
     try:
-        data = conn.recv(4096)  # Adjust buffer if needed
-        if not data:
-            return
-
-        # Decode bytes → string
-        message = data.decode('utf-8')
-        print(f"[DEBUG] Raw data: {message}")
-
-        # Parse JSON
-        json_data = json.loads(message)
-
-        # Extract string (assuming key = "message")
-        received_string = json_data.get("message", "")
-
-        print(f"[INFO] Extracted string: {received_string}")
-
-        # Send response back (optional)
-        response = "test response"
-        response = query_data.query_rag(received_string) 
-        response = json.dumps({
-            "response": response
-        })
-        conn.sendall(response.encode('utf-8'))
-
+        answer = query_data.query_rag_claude(req.query)
+        return {"answer": answer}
     except Exception as e:
-        print(f"[ERROR] {e}")
-    finally:
-        conn.close()
-        print(f"[INFO] Connection closed {addr}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-def start_server():
-    populate_database.load()
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
-        server.bind((HOST, PORT))
-        server.listen()
-        print(f"[INFO] Server listening on port {PORT}...")
 
-        while True:
-            conn, addr = server.accept()
-            handle_client(conn, addr)
+@app.get("/files")
+async def list_files():
+    try:
+        if not os.path.isdir(DATA_PATH):
+            return {"files": []}
+        files = [
+            f for f in os.listdir(DATA_PATH)
+            if f.lower().endswith(DOC_EXTENSIONS)
+        ]
+        return {"files": sorted(files)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
-    start_server()
+    import uvicorn
+    uvicorn.run("Backend:app", host="0.0.0.0", port=8000, reload=False)

@@ -1,7 +1,7 @@
 import argparse
 import os
 import shutil
-from langchain_community.document_loaders import PyPDFDirectoryLoader
+from langchain_community.document_loaders import PyPDFDirectoryLoader, Docx2txtLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from RAG.get_embedding_function import get_embedding_function
@@ -32,8 +32,15 @@ def load():
     add_to_chroma(chunks)
 
 def load_documents():
-    document_loader = PyPDFDirectoryLoader(DATA_PATH)
-    return document_loader.load()
+    docs = []
+    # Load PDFs
+    docs.extend(PyPDFDirectoryLoader(DATA_PATH).load())
+    # Load DOCX files
+    for fname in os.listdir(DATA_PATH):
+        fpath = os.path.join(DATA_PATH, fname)
+        if fname.lower().endswith(".docx"):
+            docs.extend(Docx2txtLoader(fpath).load())
+    return docs
 
 def split_documents(documents: list[Document]):
     text_splitter = RecursiveCharacterTextSplitter(
